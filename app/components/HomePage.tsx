@@ -5,6 +5,7 @@ import Nav from "./Nav";
 import Gallery from "./Gallery";
 import ContactForm from "./ContactForm";
 import Reveal from "./Reveal";
+import AdminLauncher from "./AdminLauncher";
 import { ArrowRight, ArrowUpRight, GitHub, Instagram, LinkedIn, Mail, Phone, WhatsApp, XLogo } from "./Icons";
 
 const MARQUEE = ["Brand identity", "Flyers & posters", "Websites", "Admin dashboards", "Social media design", "Photography"];
@@ -400,7 +401,9 @@ export default function HomePage({ content }: { content: SiteContent }) {
             <span>
               © {year} Dynatech Labs · {profile.name}
             </span>
-            <span>Designed &amp; built in {profile.location}</span>
+            <span>
+              Designed &amp; built in {profile.location} · <AdminLauncher />
+            </span>
           </div>
         </div>
       </footer>

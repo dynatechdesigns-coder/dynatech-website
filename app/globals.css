@@ -1273,3 +1273,19 @@ html.js .reveal.in {
     animation: none;
   }
 }
+
+/* Footer "Admin" button (opens the slide-over admin panel) */
+.footer-admin {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--dim);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.footer-admin:hover,
+.footer-admin:focus-visible {
+  color: var(--accent-2);
+}

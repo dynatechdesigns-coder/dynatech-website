@@ -2,10 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySession } from "@/lib/auth";
 
 // Everything under /admin and /api/admin needs a valid session,
-// except the login page and the login endpoint themselves.
+// except the login page, the login endpoint, and the session check (which
+// answers {loggedIn:false} itself instead of 401).
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname === "/admin/login" || pathname === "/api/admin/login") return NextResponse.next();
+  if (pathname === "/admin/login" || pathname === "/api/admin/login" || pathname === "/api/admin/session") {
+    return NextResponse.next();
+  }
 
   let ok = false;
   try {

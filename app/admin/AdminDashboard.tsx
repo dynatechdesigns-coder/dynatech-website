@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Wordmark } from "@/app/components/Logo";
 import type { Design, EditableSection, Message, Photo, Profile, Project, Service, SiteContent } from "@/lib/types";
 
@@ -16,7 +17,14 @@ const TABS: { id: Tab; label: string }[] = [
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
-export default function AdminDashboard() {
+type EmbedProps = {
+  /** Set when shown inside the homepage slide-over; absent on the standalone /admin page. */
+  onClose?: () => void;
+  onLoggedOut?: () => void;
+};
+
+export default function AdminDashboard({ onClose, onLoggedOut }: EmbedProps = {}) {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("projects");
   const [content, setContent] = useState<SiteContent | null>(null);
   const [saved, setSaved] = useState<string>("");
@@ -26,9 +34,14 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
 
+  function signedOut() {
+    if (onLoggedOut) onLoggedOut();
+    else window.location.href = "/admin/login";
+  }
+
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/content", { cache: "no-store" });
-    if (res.status === 401) return (window.location.href = "/admin/login");
+    if (res.status === 401) return signedOut();
     const json = (await res.json()) as { content: SiteContent; database: boolean; uploads: boolean };
     setContent(json.content);
     setSaved(JSON.stringify(json.content));
@@ -55,6 +68,16 @@ export default function AdminDashboard() {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [dirty]);
 
+  // Esc closes the slide-over (asks first if there are unsaved changes)
+  useEffect(() => {
+    if (!onClose) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 4000);
@@ -76,7 +99,7 @@ export default function AdminDashboard() {
         body: JSON.stringify({ section, value: content[section] }),
       });
       const json = (await res.json().catch(() => ({}))) as { error?: string };
-      if (res.status === 401) return (window.location.href = "/admin/login");
+      if (res.status === 401) return signedOut();
       if (!res.ok) throw new Error(json.error || "Save failed.");
       setDirty((d) => {
         const n = new Set(d);
@@ -84,6 +107,7 @@ export default function AdminDashboard() {
         return n;
       });
       setToast({ kind: "ok", text: "Saved. Your website is updated." });
+      router.refresh(); // re-render the page behind the panel with the new content
     } catch (err) {
       setToast({ kind: "err", text: err instanceof Error ? err.message : "Save failed." });
     } finally {
@@ -99,7 +123,17 @@ export default function AdminDashboard() {
 
   async function logout() {
     await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin/login";
+    if (onLoggedOut) {
+      router.refresh();
+      onLoggedOut();
+    } else {
+      window.location.href = "/admin/login";
+    }
+  }
+
+  function close() {
+    if (dirty.size && !window.confirm("You have unsaved changes. Close anyway?")) return;
+    onClose?.();
   }
 
   const unread = messages.filter((m) => !m.read).length;
@@ -113,17 +147,31 @@ export default function AdminDashboard() {
   return (
     <div className="a-shell">
       <header className="a-top">
-        <a href="/admin" className="a-brand">
-          <Wordmark size={28} />
-          <span className="a-tag">Admin</span>
-        </a>
-        <div className="a-top-actions">
-          <a className="a-btn" href="/" target="_blank" rel="noopener">
-            View site ↗
+        {onClose ? (
+          <span className="a-brand">
+            <Wordmark size={28} />
+            <span className="a-tag">Admin</span>
+          </span>
+        ) : (
+          <a href="/admin" className="a-brand">
+            <Wordmark size={28} />
+            <span className="a-tag">Admin</span>
           </a>
+        )}
+        <div className="a-top-actions">
+          {!onClose && (
+            <a className="a-btn" href="/" target="_blank" rel="noopener">
+              View site ↗
+            </a>
+          )}
           <button className="a-btn" onClick={logout}>
             Log out
           </button>
+          {onClose && (
+            <button className="a-btn a-close" onClick={close} aria-label="Close admin panel">
+              ✕
+            </button>
+          )}
         </div>
       </header>
 

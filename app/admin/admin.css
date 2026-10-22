@@ -495,3 +495,57 @@ section > .a-card {
     width: 150px;
   }
 }
+
+/* ============ Slide-over panel on the homepage ============ */
+.admin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(2, 4, 10, 0.6);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: flex-end;
+}
+.admin.admin-panel {
+  width: min(1180px, 100%);
+  height: 100dvh;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-left: 1px solid var(--line-strong);
+  outline: none;
+  animation: admin-slide 0.25s ease-out;
+}
+@keyframes admin-slide {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.admin-panel .a-loading,
+.admin-panel .admin-panel-login {
+  min-height: 100dvh;
+}
+.admin-panel .login-card {
+  position: relative;
+}
+.admin-panel-x {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+.a-close {
+  padding-inline: 12px;
+}
+.admin-panel .a-shell {
+  padding-bottom: 120px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin.admin-panel {
+    animation: none;
+  }
+}
